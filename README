@@ -1,0 +1,102 @@
+NAME
+    HTTPD::WatchLog - watching Apache AccessLog in realtime
+
+SYNOPSIS
+      use HTTPD::WatchLog;
+
+      # ready..
+      my $log = new HTTPD::WatchLog;
+
+      $log->file('/usr/local/apache/logs/combined_log');
+      $log->addr2host(1);    # convert ip address to hostname
+
+      # set options
+      $log->ignore('localhost', '192\.168\.0\.');
+      $log->ignore('/cgi-bin/');
+      $log->highlight('POST ');
+      $log->highlight(' 404 ', ' 500 ');
+
+      # regist triggers
+      my $sub = sub {
+        my $line = shift;
+        print STDERR "*** worm detected! \n" if $line =~ m|/root\.exe|;
+      };
+      sub foo {
+        exit(0) if shift =~ /Macintosh/;
+      }
+      $log->trigger( $sub, \&foo );
+
+      # go!
+      $log->watch;
+
+DESCRIPTION
+    HTTPD::WatchLog is designed for watching Apache webserver's AccessLog in
+    realtime. This module provides unix command tail(1) like environment
+    with more enhancement.
+
+METHOD
+    new()
+
+            Construct a object. Some values (provided as accessors) can be set here.
+
+            my $log = HTTPD::WatchLog->new(
+                file => '/usr/local/apache/logs/access_log',
+                addr2host => 1,
+              );
+
+    file()
+
+            File path of what you want to watch. The default path is '/usr/local/apache/logs/access_log'.
+
+            $log->file('/var/httpd/logs/combined_log');
+
+    addr2host()
+
+            Turn on ip address to hostnam DNS lookup switch. boolean value.
+
+            $log->addr2host(1);    # on
+            $log->addr2host(0);    # off (default)
+
+    ignore()
+
+            Set regex as scalar or array. The module ignores lines that cotains the regex(es).
+
+            $log->ignore( 'localhost', '192\.168\.0\.' );
+            $log->ignore( 'Mon' );    # i hate monday of course .. ;-)
+
+    highlight()
+
+            Set regex as scalar or array. highlight()ed term is highlightly showed if you use proper terminal.
+
+            $log->highlight( 'HEAD ', 'POST ' );
+            $log->highlight( 'root\.exe' );
+
+    trigger()
+
+            Regist trigger subroutines as scalar or array.
+
+            my $sub = sub {  ...  };
+            sub foo {  ...  };
+
+            $log->trigger( $sub );
+            $log->trigger( $sub, \&foo );
+
+    watch()
+
+            Now you can got it ! That's all.
+
+            $log->watch;
+
+DEPENDENCY
+    File::Tail, Class::Accessor
+
+AUTHOR
+    Okamoto RYO <ryo@aquahill.net>
+
+SEE ALSO
+    perl(1), tail(1), File::Tail, Socket, Class::Accessor
+
+TODO
+    Thinking now.. This module is experimental one, please tell me your
+    ideas. :-)
+
