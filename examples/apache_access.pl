@@ -5,7 +5,7 @@ use HTTPD::WatchLog 0.03;
 $| = 1;
 
 my $log = new HTTPD::WatchLog;
-$log->file( $ARGV[0] ) if $ARGV[0] and -r $ARGV[0];
+$log->file( $ARGV[0] ) if $ARGV[0] && -r $ARGV[0];
 
 # turn on DNS lookup
 $log->addr2host(1);
@@ -17,7 +17,7 @@ $log->quote(1);
 $log->pack(1);
 
 # set width
-$log->width( 120 );
+$log->align_width or $log->width(80);
 
 # check error request
 $log->highlight( ' 404 ', ' 500 ' );

@@ -7,9 +7,9 @@ use File::Basename;
 $| = 1;
 
 my $log = new HTTPD::WatchLog;
-$log->file( $ARGV[0] ) if $ARGV[0] and -r $ARGV[0];
+$log->file( $ARGV[0] ) if $ARGV[0] && -r $ARGV[0];
 
-my $logfile = sprintf "/tmp/%s_%s.log", 'HTTPD::WatchLog', File::Basename::basename($0);
+my $logfile = sprintf "/tmp/%s_%s.%d.log", 'HTTPD::WatchLog', File::Basename::basename($0), $$;
 
 my $fh = new FileHandle $logfile, 'w'
   or die qq/cannot open '$logfile'./;

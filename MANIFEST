@@ -7,3 +7,4 @@ examples/apache_access.pl
 examples/apache_to_file.pl
 examples/squid_access.pl
 test.pl
+META.yml                                 Module meta-data (added by MakeMaker)

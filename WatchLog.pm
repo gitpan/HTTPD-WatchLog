@@ -3,11 +3,11 @@ package HTTPD::WatchLog;
 use strict;
 require 5.00502;    # for Class::Accessor 0.17 and qr// operator
 use vars qw( $VERSION );
-use base qw( Class::Accessor );
+use base qw( Class::Accessor::Fast );
 use Socket qw( inet_aton AF_INET );
 use File::Tail;
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 sub new {
   my $param = shift;
@@ -16,7 +16,6 @@ sub new {
   my %args = (
     file => '/usr/local/apache/logs/access_log',
     addr2host => 0,
-    time2str => 0,
     decor => 'bold',    # internal only
     quote => 0,
     pack => 0,
@@ -76,6 +75,18 @@ sub trigger {
   return scalar @{ $self->{trigger} };
 }
 
+sub align_width {
+  my $self = shift;
+
+  eval "use Term::Size;";
+  return if $@;
+
+  my($columns, $rows) = Term::Size::chars( *STDOUT{IO} );
+  $self->width( $columns ) if $columns =~ /^\d+$/ && $columns > 0;
+
+  return $self;
+}
+
 sub watch {
   my $self = shift;
   $self->file(shift) if @_;
@@ -99,7 +110,7 @@ sub watch {
   while( defined( my $line = $file->read ) ){  
 
     # addr2host
-    $line =~ s/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/eval{ (gethostbyaddr(inet_aton($1), AF_INET))[0] || $1 }/geo
+    $line =~ s/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/eval{ (gethostbyaddr(inet_aton($1), AF_INET))[0] } || $1 /geo
 	if $self->addr2host;
 
     # epoch2date
@@ -134,7 +145,7 @@ sub watch {
 	$line .= "\n" if $line !~ /\n$/;
     }
 
-    my $fh = $self->{fh} || \*STDOUT;
+    my $fh = $self->fh || \*STDOUT;
     print $fh $line;
   }
 
@@ -153,7 +164,7 @@ sub _decor_str {
     underline => "\033[4m",
   };
 
-  return $decor->{$self->{decor}}
+  return $decor->{$self->{decor}};
 }
 
 return 1;
@@ -184,7 +195,7 @@ HTTPD::WatchLog - watching Apache AccessLog simply in realtime
   $log->highlight(' 404 ', ' 500 ');
 
   $log->pack(1);
-  $log->width(100);
+  $log->align_width or $log->width(120);
   $log->epoch2date(1);
   $log->fd($fh);
 
@@ -202,7 +213,7 @@ HTTPD::WatchLog - watching Apache AccessLog simply in realtime
 HTTPD::WatchLog is designed for watching Apache webserver's (or Squid's) AccessLog in realtime.
 This module provides unix command tail(1) like environment with more enhancement.
 
-At least on FreeBSD this doesn't work properly,
+At least on FreeBSD, this doesn't work properly,
 
   shell> tail -F access_log | grep -v foo | grep -v bar | grep -v buz ...
 
@@ -286,11 +297,18 @@ B<pack()>
 
 B<width()>
 
-	Truncate the tail of over lines of 'width' chars.
-	This means you don't need to see folded lines.
+	Truncate the tail of each lines. The chars after 'width' butes will
+	be deleted. This means you don't need to see folded lines.
 
 	$log->width(80);    # showed only 80 chars from line head.
-	$log->width(undef);    # off (default)
+	$log->width(0);    # off (default)
+
+B<align_width()>
+
+	Autoset the terminal columns to width by using Term::Size.
+
+	$log->align_width;
+	$log->align_width or $log->width(120);
 
 B<epoch2date()>
 
@@ -321,10 +339,10 @@ File::Tail, Class::Accessor
 
 =head1 AUTHOR
 
-Okamoto RYO <ryo@aquahill.net>
+ryochin <ryochin@cpan.org>
 
 =head1 SEE ALSO
 
-perl(1), tail(1), File::Tail, Socket, Class::Accessor
+perl(1), tail(1), File::Tail, Socket, Class::Accessor, Term::Size
 
 =cut

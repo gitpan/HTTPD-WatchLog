@@ -1,12 +1,15 @@
 Revision history for Perl extension HTTPD::WatchLog.
 
+0.04  Wed Nov 10 17:34:10 2004
+	+ align_width() method has added.
+
 0.03  Thu Nov  6 05:04:17 2003
 	+ pack() method has added.
 	+ width() method has added.
 	+ epoch2date() method has added.
 	+ fh() method has added.
 	* now ignore(), highlight(), and trigger() returns the total
-	  number of registed keys.
+	  number of registered keys.
 	* don't die anymore under some exceptions in watch().
 
 0.02  Sun Jun  8 22:07:10 2003

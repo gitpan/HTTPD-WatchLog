@@ -7,7 +7,7 @@ $| = 1;
 my $log = new HTTPD::WatchLog;
 
 my $file = '/usr/local/squid/logs/access.log';
-$file = $ARGV[0] if $ARGV[0] and -r $ARGV[0];
+$file = $ARGV[0] if $ARGV[0] && -r $ARGV[0];
 $log->file( $file );
 
 # turn on DNS lookup
@@ -20,7 +20,7 @@ $log->epoch2date(1);
 $log->quote(1);
 
 # set width
-$log->width(120);
+$log->align_width or $log->width(80);
 
 # cached req
 $log->highlight( ' TCP_HIT/200 ', ' TCP_REFRESH_HIT/200 ', ' TCP_MEM_HIT/200 ' );
