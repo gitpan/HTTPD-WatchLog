@@ -1,5 +1,5 @@
 NAME
-    HTTPD::WatchLog - watching Apache AccessLog in realtime
+    HTTPD::WatchLog - watching Apache AccessLog simply in realtime
 
 SYNOPSIS
       use HTTPD::WatchLog;
@@ -10,34 +10,43 @@ SYNOPSIS
       $log->file('/usr/local/apache/logs/combined_log');
       $log->addr2host(1);    # convert ip address to hostname
 
-      # set options
-      $log->ignore('localhost', '192\.168\.0\.');
+      # set some options
+      $log->quote(1);
+      $log->ignore('localhost', '192.168.0.');
       $log->ignore('/cgi-bin/');
       $log->highlight('POST ');
       $log->highlight(' 404 ', ' 500 ');
 
+      $log->pack(1);
+      $log->width(100);
+      $log->epoch2date(1);
+      $log->fd($fh);
+
       # regist triggers
-      my $sub = sub {
-        my $line = shift;
-        print STDERR "*** worm detected! \n" if $line =~ m|/root\.exe|;
-      };
-      sub foo {
-        exit(0) if shift =~ /Macintosh/;
-      }
-      $log->trigger( $sub, \&foo );
+      $log->trigger( sub {
+          my $line = shift;
+          print STDERR "*** worm detected! \n" if $line =~ m|/root\.exe|;
+        } );
 
       # go!
       $log->watch;
 
 DESCRIPTION
-    HTTPD::WatchLog is designed for watching Apache webserver's AccessLog in
-    realtime. This module provides unix command tail(1) like environment
-    with more enhancement.
+    HTTPD::WatchLog is designed for watching Apache webserver's (or Squid's)
+    AccessLog in realtime. This module provides unix command tail(1) like
+    environment with more enhancement.
+
+    At least on FreeBSD this doesn't work properly,
+
+      shell> tail -F access_log | grep -v foo | grep -v bar | grep -v buz ...
+
+    so I need other facile solutions.
 
 METHOD
     new()
 
-            Construct a object. Some values (provided as accessors) can be set here.
+            Construct a object. Some values (provided as accessors)
+            can be set here.
 
             my $log = HTTPD::WatchLog->new(
                 file => '/usr/local/apache/logs/access_log',
@@ -46,7 +55,8 @@ METHOD
 
     file()
 
-            File path of what you want to watch. The default path is '/usr/local/apache/logs/access_log'.
+            File path of what you want to watch. The default path is
+            '/usr/local/apache/logs/access_log'.
 
             $log->file('/var/httpd/logs/combined_log');
 
@@ -57,16 +67,37 @@ METHOD
             $log->addr2host(1);    # on
             $log->addr2host(0);    # off (default)
 
+    quote()
+
+            If true, meta characters in your regex patterns may be quoted
+            using built-in quotemeta() function,
+
+            $log->quote(1);   # on
+            $log->quote(0);   # off (default)
+
+            means these lines are ..
+
+            $log->quote(0);
+            $log->ignore('192\.168\.0\.');
+
+            the same as below. You can set it when you don't want to put regex
+            into 'ignore' or 'highlight' list.
+
+            $log->quote(1);
+            $log->ignore('192.168.0.');
+
     ignore()
 
-            Set regex as scalar or array. The module ignores lines that cotains the regex(es).
+            Set pattern(s) as scalar or array. The module ignores lines
+            that cotains at least one of the pattern(s).
 
             $log->ignore( 'localhost', '192\.168\.0\.' );
             $log->ignore( 'Mon' );    # i hate monday of course .. ;-)
 
     highlight()
 
-            Set regex as scalar or array. highlight()ed term is highlightly showed if you use proper terminal.
+            Set pattern(s) as scalar or array. highlight()ed term is
+            highlightly showed if you use proper terminal.
 
             $log->highlight( 'HEAD ', 'POST ' );
             $log->highlight( 'root\.exe' );
@@ -76,14 +107,44 @@ METHOD
             Regist trigger subroutines as scalar or array.
 
             my $sub = sub {  ...  };
-            sub foo {  ...  };
+            my $sub2 = sub {  ...  };
+            $log->trigger( $sub, $sub2 );
 
-            $log->trigger( $sub );
-            $log->trigger( $sub, \&foo );
+    pack()
+
+            Pack MIME-encoded multibyte charactors to plain text. boolean value.
+
+            $log->pack(1);    # on
+            $log->pack(0);    # off (default)
+
+    width()
+
+            Truncate the tail of over lines of 'width' chars.
+            This means you don't need to see folded lines.
+
+            $log->width(80);    # showed only 80 chars from line head.
+            $log->width(undef);    # off (default)
+
+    epoch2date()
+
+            Replace epoch-like digits to human-readable string. boolean value.
+            This may be useful in squid log.
+
+            e.g. 1068056885.612 -> 6 03:28:05
+
+            $log->epoch2date(1);    # on
+            $log->epoch2date(0);    # off (default)
+
+    fh()
+
+            Set filehandle object. 'STDOUT' is default.
+
+            my $fh = new FileHandle $logfile, 'w';
+            $log->fh($fh);
 
     watch()
 
-            Now you can got it ! That's all.
+            Now you can get it ! That's all.
 
             $log->watch;
 
@@ -95,8 +156,4 @@ AUTHOR
 
 SEE ALSO
     perl(1), tail(1), File::Tail, Socket, Class::Accessor
-
-TODO
-    Thinking now.. This module is experimental one, please tell me your
-    ideas. :-)
 

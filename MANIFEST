@@ -4,5 +4,6 @@ Makefile.PL
 README
 WatchLog.pm
 examples/apache_access.pl
+examples/apache_to_file.pl
 examples/squid_access.pl
 test.pl
