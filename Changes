@@ -1,5 +1,9 @@
 Revision history for Perl extension HTTPD::WatchLog.
 
+0.02  Sun Jun  8 22:07:10 2003
+	* addr2host() now works everywhere in the current line.
+	+ quote() method has added.
+
 0.01  Sun Oct 20 14:47:45 2002
 	* alpha release.
 

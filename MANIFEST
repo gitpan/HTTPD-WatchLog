@@ -3,5 +3,6 @@ MANIFEST
 Makefile.PL
 README
 WatchLog.pm
-examples/watchlog.pl
+examples/apache_access.pl
+examples/squid_access.pl
 test.pl
